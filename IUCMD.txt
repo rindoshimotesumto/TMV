@@ -1,1 +1,2 @@
 find . -type d -empty -exec touch {}/.gitkeep \;
+find . -type d -exec touch {}/__init__.py \;
