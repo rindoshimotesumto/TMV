@@ -1,8 +1,5 @@
 # TVM
 
-#RJU - 1
-#ONEID - 2
-
 Organization → Branch → Department → Position → Users → Tasks
 
 Это прям супер-логично:
