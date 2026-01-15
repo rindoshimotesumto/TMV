@@ -1,4 +1,5 @@
 import sqlite3
+from database.db_logger.db_logger import db_ok, db_error
 
 def create_organization_table(cursor: sqlite3.Cursor) -> None:
     """
@@ -8,15 +9,46 @@ def create_organization_table(cursor: sqlite3.Cursor) -> None:
         cursor (sqlite3.Cursor): Соединение с базой данных SQLite.
     """
 
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS organization (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
+    try:
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS organization (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
 
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
     
-    cursor.execute(create_table_sql)
-    cursor.connection.commit()
+        cursor.execute(create_table_sql)
+        cursor.connection.commit()
+        db_ok("Table 'organization' created successfully ✅")
+
+    except sqlite3.Error as e:
+        cursor.connection.rollback()
+        db_error(f"Error creating table 'organization': {e} ❌")
+
+
+def add_organization(cursor: sqlite3.Cursor, name: str) -> None:
+    """
+    Добавление новой организации в таблицу "organization".
+
+    Args:
+        cursor (sqlite3.Cursor): Соединение с базой данных SQLite.
+        name (str): Название организации.
+    """
+
+    try:
+        insert_sql = """
+        INSERT INTO organization (name)
+        VALUES (?);
+        """
+    
+        cursor.execute(insert_sql, (name,))
+        cursor.connection.commit()
+        
+        db_ok(f"Organization '{name}' added successfully ✅")
+
+    except sqlite3.Error as e:
+        cursor.connection.rollback()
+        db_error(f"Error adding organization '{name}': {e} ❌")
