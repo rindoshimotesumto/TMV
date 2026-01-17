@@ -22,12 +22,11 @@ def create_organization_table(cursor: sqlite3.Cursor) -> None:
     
         cursor.execute(create_table_sql)
         cursor.connection.commit()
-        db_ok("Table 'organization' created successfully ✅")
+        db_ok("Таблица organization успешно создана ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error creating table 'organization': {e} ❌")
-
+        db_error(f"Ошибка при создании таблицы organization: {e} ❌")
 
 def add_organization(cursor: sqlite3.Cursor, name: str) -> None:
     """
@@ -46,9 +45,9 @@ def add_organization(cursor: sqlite3.Cursor, name: str) -> None:
     
         cursor.execute(insert_sql, (name,))
         cursor.connection.commit()
-        
-        db_ok(f"Organization '{name}' added successfully ✅")
+
+        db_ok(f"Организация '{name}' добавлена успешно ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error adding organization '{name}': {e} ❌")
+        db_error(f"Ошибка при добавлении организации '{name}': {e} ❌")

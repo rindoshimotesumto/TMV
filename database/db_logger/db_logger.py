@@ -1,6 +1,6 @@
 from datetime import datetime
 
-LOG_FILE = "database/db_logger/database.log"
+LOG_FILE = "database.log"
 
 def _write(line: str):
     with open(LOG_FILE, "a", encoding="utf-8") as f:

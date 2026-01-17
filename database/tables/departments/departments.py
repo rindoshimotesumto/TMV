@@ -31,12 +31,11 @@ def create_departments_table(cursor: sqlite3.Cursor) -> None:
         """)
 
         cursor.connection.commit()
-        db_ok("Table 'departments' was created successfully or already exists ✅")
+        db_ok("Таблица departments успешно создана ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error creating table 'departments': {e} ❌")
-
+        db_error(f"Ошибка при создании таблицы departments: {e} ❌")
 
 def add_department(cursor: sqlite3.Cursor, name: str, branch_id: int) -> None:
     try:
@@ -56,9 +55,9 @@ def add_department(cursor: sqlite3.Cursor, name: str, branch_id: int) -> None:
 
         cursor.execute(insert_sql, (name, branch_id))
         cursor.connection.commit()
-        
-        db_ok(f"Department '{name}' added successfully ✅")
+
+        db_ok(f"Отдел '{name}' добавлен успешно ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error adding department '{name}': {e} ❌")
+        db_error(f"Ошибка при добавлении отдела '{name}': {e} ❌")

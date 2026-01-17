@@ -14,7 +14,8 @@ def create_users_table(cursor: sqlite3.Cursor) -> None:
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tg_id INTEGER NOT NULL UNIQUE,
-
+            role TEXT CHECK (role IN ('admin', 'user', 'superadmin')) DEFAULT 'user',
+            
             pin_code TEXT NOT NULL,
 
             password TEXT NOT NULL CHECK (8 <= LENGTH(password) <= 64),
@@ -46,16 +47,15 @@ def create_users_table(cursor: sqlite3.Cursor) -> None:
         """)
 
         cursor.connection.commit()
-        db_ok("Created 'users' table successfully ✅")
+        db_ok("Таблица users успешно создана ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error creating 'users' table: {e} ❌")
+        db_error(f"Ошибка при создании таблицы users: {e} ❌")
 
-
-def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, password: str, position_id: int,
+def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, role: str, password: str, position_id: int,
              surname: str, last_name: str, middle_name: str,
-             date_of_birth: str, phone_number: str | None = None) -> None:
+             date_of_birth: str, work: int=1, phone_number: str | None = None) -> None:
     """
     Добавляет нового пользователя в таблицу 'users'.
 
@@ -63,28 +63,30 @@ def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, password: str, p
         cursor (sqlite3.Cursor): Соединение с базой данных.
         tg_id (int): Telegram ID пользователя.
         pin_code (str): PIN пользователя.
+        role (str): Роль пользователя ('admin', 'user', 'superadmin').
         password (str): Пароль пользователя.
         position_id (int): ID должности пользователя.
         surname (str): Фамилия пользователя.
         last_name (str): Имя пользователя.
         middle_name (str): Отчество пользователя.
         date_of_birth (str): Дата рождения пользователя в формате 'YYYY-MM-DD'.
+        work (int): Статус работы пользователя (по умолчанию 1).
         phone_number (str): Номер телефона пользователя.
     """
     
     try:
         insert_user_sql = """
-        INSERT INTO users (tg_id, pin_code, password, position_id, surname, last_name, middle_name, date_of_birth, phone_number)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO users (tg_id, pin_code, role, password, position_id, surname, last_name, middle_name, date_of_birth, phone_number, works)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
 
-        cursor.execute(insert_user_sql, (tg_id, pin_code, password, position_id,
+        cursor.execute(insert_user_sql, (tg_id, pin_code, role, password, position_id,
                                          surname, last_name, middle_name,
-                                         date_of_birth, phone_number))
+                                         date_of_birth, phone_number, work))
 
         cursor.connection.commit()
-        db_ok(f"Added user with tg_id({tg_id}) successfully ✅")
+        db_ok(f"Пользователь с tg_id({tg_id}) успешно добавлен ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error adding user with tg_id({tg_id}): {e} ❌")
+        db_error(f"Ошибка при добавлении пользователя с tg_id({tg_id}): {e} ❌")

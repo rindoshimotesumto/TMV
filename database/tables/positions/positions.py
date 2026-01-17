@@ -32,14 +32,13 @@ def create_positions_table(cursor: sqlite3.Cursor) -> None:
         """)
 
         cursor.connection.commit()
-        db_ok("Created 'positions' table successfully ✅")
+        db_ok("Таблица positions успешно создана ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error creating 'positions' table: {e} ❌")
+        db_error(f"Ошибка при создании таблицы positions: {e} ❌")
 
-
-def add_position(cursor: sqlite3.Cursor, name: str, department_id: int) -> None:
+def add_position(cursor: sqlite3.Cursor, department_id: int, name: str) -> None:
     """
     Добавляет новую позицию в таблицу 'positions'.
 
@@ -57,9 +56,9 @@ def add_position(cursor: sqlite3.Cursor, name: str, department_id: int) -> None:
 
         cursor.execute(insert_sql, (name, department_id))
         cursor.connection.commit()
-        
-        db_ok(f"Added position '{name}' successfully ✅")
+
+        db_ok(f"Позиция '{name}' успешно добавлена ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error adding position '{name}': {e} ❌")
+        db_error(f"Ошибка при добавлении позиции '{name}': {e} ❌")

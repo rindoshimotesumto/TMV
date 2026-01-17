@@ -32,12 +32,11 @@ def create_branches_table(cursor: sqlite3.Cursor) -> None:
         """)
 
         cursor.connection.commit()
-        db_ok("Table 'branches' created successfully ✅")
+        db_ok("Таблица branches успешно создана ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error creating table 'branches': {e} ❌")
-
+        db_error(f"Ошибка при создании таблицы branches: {e} ❌")
 
 def add_branch(cursor: sqlite3.Cursor, name: str, organization_id: int) -> None:
     """
@@ -57,9 +56,9 @@ def add_branch(cursor: sqlite3.Cursor, name: str, organization_id: int) -> None:
 
         cursor.execute(insert_sql, (name, organization_id))
         cursor.connection.commit()
-        
-        db_ok(f"Branch '{name}' added successfully ✅")
+
+        db_ok(f"Филиал '{name}' добавлен успешно ✅")
 
     except sqlite3.Error as e:
         cursor.connection.rollback()
-        db_error(f"Error adding branch '{name}': {e} ❌")
+        db_error(f"Ошибка при добавлении филиала '{name}': {e} ❌")
