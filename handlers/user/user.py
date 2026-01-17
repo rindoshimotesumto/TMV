@@ -2,13 +2,9 @@ from aiogram import Router
 from aiogram.types import Message, CallbackQuery
 from handlers.user.utils import words, error_cmd
 from aiogram.filters.command import CommandObject, CommandStart, Command
-from keyboards.callback_query.user.user_commands import get_user_kb
+from keyboards.callback_query.callback_query import build_kb
 
 router = Router()
-
-@router.message(CommandStart())
-async def start(message: Message):
-    await message.answer(f"Salom @{message.from_user.username}!", reply_markup=get_user_kb())
 
 @router.message()
 async def msg(message: Message):

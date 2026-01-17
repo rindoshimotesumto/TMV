@@ -2,6 +2,7 @@ import asyncio, os
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from handlers.user import user
+from handlers.start import start
 
 load_dotenv(dotenv_path=".env")
 TOKEN = os.getenv("BOT_TOKEN")
@@ -12,6 +13,7 @@ async def main():
     dp = Dispatcher()
 
     dp.include_routers(
+        start.router,
         user.router,
     )
 

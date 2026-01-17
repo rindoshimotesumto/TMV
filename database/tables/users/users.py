@@ -15,9 +15,9 @@ def create_users_table(cursor: sqlite3.Cursor) -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tg_id INTEGER NOT NULL UNIQUE,
             role TEXT CHECK (role IN ('admin', 'user', 'superadmin')) DEFAULT 'user',
+            lang TEXT CHECK (lang IN ('uz', 'ru', 'en')) DEFAULT 'uz',
             
             pin_code TEXT NOT NULL,
-
             password TEXT NOT NULL CHECK (8 <= LENGTH(password) <= 64),
 
             position_id INTEGER NOT NULL,
@@ -53,7 +53,7 @@ def create_users_table(cursor: sqlite3.Cursor) -> None:
         cursor.connection.rollback()
         db_error(f"Ошибка при создании таблицы users: {e} ❌")
 
-def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, role: str, password: str, position_id: int,
+def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, role: str, lang: str, password: str, position_id: int,
              surname: str, last_name: str, middle_name: str,
              date_of_birth: str, work: int=1, phone_number: str | None = None) -> None:
     """
@@ -64,6 +64,7 @@ def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, role: str, passw
         tg_id (int): Telegram ID пользователя.
         pin_code (str): PIN пользователя.
         role (str): Роль пользователя ('admin', 'user', 'superadmin').
+        lang (str): Язык интерфейса бота.
         password (str): Пароль пользователя.
         position_id (int): ID должности пользователя.
         surname (str): Фамилия пользователя.
@@ -76,11 +77,11 @@ def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, role: str, passw
     
     try:
         insert_user_sql = """
-        INSERT INTO users (tg_id, pin_code, role, password, position_id, surname, last_name, middle_name, date_of_birth, phone_number, works)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO users (tg_id, pin_code, role, lang, password, position_id, surname, last_name, middle_name, date_of_birth, phone_number, works)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
 
-        cursor.execute(insert_user_sql, (tg_id, pin_code, role, password, position_id,
+        cursor.execute(insert_user_sql, (tg_id, pin_code, role, lang, password, position_id,
                                          surname, last_name, middle_name,
                                          date_of_birth, phone_number, work))
 
@@ -90,3 +91,19 @@ def add_user(cursor: sqlite3.Cursor, tg_id: int, pin_code: str, role: str, passw
     except sqlite3.Error as e:
         cursor.connection.rollback()
         db_error(f"Ошибка при добавлении пользователя с tg_id({tg_id}): {e} ❌")
+
+def get_info_of_user_by_tg_id(cursor: sqlite3.Cursor, tg_id: int) -> tuple:
+    try:
+        insert_use_sql = """
+        SELECT * FROM users WHERE tg_id = ?;
+        """
+
+        cursor.execute(insert_use_sql, (tg_id,))
+        user_info = cursor.fetchone()
+        db_ok(f"Пользователь с tg_id({tg_id}, успешно найден ✅)")
+    
+        return user_info
+    
+    except sqlite3.Error as e:
+        db_error(f"Произашла ошибка при поиске юзера({tg_id}, причина: {e})")
+        return False
