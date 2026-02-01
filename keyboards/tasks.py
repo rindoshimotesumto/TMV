@@ -1,0 +1,18 @@
+BTN_TEXTS = {
+    "my_tasks": {"ru": "📋 Мои задачи", "uz": "📋 Mening vazifalarim"},
+    "profile": {"ru": "👤 Профиль", "uz": "👤 Profil"},
+    "users": {"ru": "👥 Пользователи", "uz": "👥 Foydalanuvchilar"},
+    "reports": {"ru": "📊 Отчёты", "uz": "📊 Hisobotlar"},
+    "settings": {"ru": "⚙️ Настройки системы", "uz": "⚙️ Tizim sozlamalari"},
+    "in_progress": {"ru": "🟡 В работе", "uz": "🟡 Jarayonda"},
+    "completed": {"ru": "✅ Завершённые", "uz": "✅ Tugallangan"},
+    "canceled": {"ru": "❌ Отменённые", "uz": "❌ Bekor qilingan"},
+    "overdue": {"ru": "⏰ Просроченные", "uz": "⏰ Muddati o‘tgan"},
+}
+
+
+ROLE_BUTTONS = {
+    "user": ("my_tasks", "in_progress", "completed", "canceled", "overdue", "profile"),
+    "admin": ("my_tasks", "users", "reports", "profile"),
+    "superadmin": ("my_tasks", "users", "reports", "settings", "profile"),
+}
