@@ -3,106 +3,112 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from answers_template import ANSWERS, ERRORS
 from database.database import DataBase
 from handlers.start.login_user_state import LoginUser
-from handlers.template_of_answers.answers import ANSWERS, ERRORS
+from handlers.utils.login_user import login_user
 from keyboards.builder_inline_btns import build_menu_kb
-
-from .login_user import login_user
 
 router = Router()
 db = DataBase()
 
 
-# обработка команды /start
-# будем пытатся логинить юзера по кешу, не получится, то по базе
+# /start — очистка состояния и попытка авто-логина пользователя
+# сначала проверяем кэш, затем БД
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
 
+    # защита от редкого случая отсутствия from_user
     if not message.from_user:
         await message.answer(ERRORS["telegram_id_not_found"]["uz"])
         return
 
+    # пробуем авторизовать по tg_id (кэш → БД)
     status, answer, lang, role, password = await login_user(message.from_user.id)
 
+    # если не найден — просим PIN
     if not status:
         await message.answer(text=answer)
         await state.set_state(LoginUser.pin_code)
+
+    # если найден — показываем меню
     else:
         await message.answer(text=answer, reply_markup=build_menu_kb(role, lang))
 
 
-# после получение pin_code, ищем юзера в кешах и бд
-# если в кешах, то мы получаем инфу с кешов
-# если в бд, то мы сохраняем в кеш а после возвращаем данные (status, answer, lang, role, password)
+# обработка ввода PIN-кода
+# ищем пользователя: сначала кэш, потом БД → при успехе сохраняем данные во FSM
 @router.message(LoginUser.pin_code)
 async def input_pin(message: Message, state: FSMContext):
-    # если не текст говорим об этом
+    # принимаем только текст
     if not message.text:
         await message.answer(ANSWERS["login"]["wrong_password"]["uz"])
         return
 
-    # убираем пустоту, в случае другого типа сообщение говорим что принимиаем только текст
-    pin_code: str = (message.text or "").strip()
+    # убираем пробелы
+    pin_code = (message.text or "").strip()
 
-    # мало-ли ошибка какая
+    # защита от отсутствия from_user
     if not message.from_user:
         await message.answer(ERRORS["telegram_id_not_found"]["uz"])
         return
 
-    # проверим на валидность\корректность
+    # PIN должен быть числовым и длиной 14 символов
     if not (pin_code.isdigit() and len(pin_code) == 14):
         await message.answer(ANSWERS["login"]["wrong_pin"]["uz"])
         return
 
-    # status: результат функции
-    # answer: текст который мы передадим юзеру
-    # lang|role: язык и роль юзера, дефолт= uz|user
-    # password: нужен что-бы уменшить кол-во запросов в бд
+    # login_user вернет:
+    # status — найден ли пользователь
+    # answer — текст ответа
+    # lang / role — язык и роль
+    # password — пароль из БД (чтобы не делать второй запрос)
     status, answer, lang, role, password = await login_user(
         message.from_user.id, pin_code
     )
 
-    # если юзера нет в кешах и даже в бд, то говорим что-бы помог админ
+    # если пользователь не найден — сообщаем и выходим
     if status is False:
         await message.answer(text=answer)
         await state.clear()
         return
 
-    # если нашел храним данные в state и переходим к получение password
+    # пользователь найден — просим пароль
     await message.answer(ANSWERS["login"]["input_password"]["uz"])
 
+     # сохраняем данные для следующего шага проверки
     await state.update_data(pin_code=pin_code, password=password, lang=lang, role=role)
     await state.set_state(LoginUser.password)
 
 
-# после получение password, сравниваем пароли, True -> меню, False -> попробуй ещё раз
+# обработка ввода пароля
+# сравниваем введенный пароль с сохраненным → успех = меню, иначе повтор
 @router.message(LoginUser.password)
 async def input_password(message: Message, state: FSMContext):
-    # если не текст говорим об этом
+    # принимаем только текст
     if not message.text:
         await message.answer(ANSWERS["login"]["wrong_password"]["uz"])
         return
 
-    # убираем пустоту
-    input_password: str = (message.text or "").strip()
+    # очищаем ввод
+    input_password = (message.text or "").strip()
 
-    # мало-ли ошибка какая
+    # защита от отсутствия from_user
     if not message.from_user:
         await message.answer(ERRORS["telegram_id_not_found"]["uz"])
         return
 
-    # проверяем длину
+    # базовая проверка длины пароля
     if not (8 <= len(input_password) <= 64):
         await message.answer(ANSWERS["login"]["wrong_password"]["uz"])
         return
 
-    # берем информацию с state
-    data: dict = await state.get_data()
+    # получаем сохраненные данные из FSM
+    data = await state.get_data()
     password, lang, role = data["password"], data["lang"], data["role"]
 
-    # проверяем пароль
+    # если пароль совпал — успешный вход
     if password == input_password:
         await message.answer(
             text=ANSWERS["login"]["login_success"][lang],
@@ -112,7 +118,7 @@ async def input_password(message: Message, state: FSMContext):
         await state.clear()
         return
 
-    # если пароли не совпали говорим об этом!
+     # если не совпал — ошибка и повтор ввода
     else:
         await message.answer(
             text=ANSWERS["login"]["wrong_password"]["uz"],

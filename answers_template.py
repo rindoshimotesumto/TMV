@@ -1,6 +1,6 @@
 alphaADMIN = "https://t.me/rindoshimotesumto"
 
-ANSWERS = {
+ANSWERS: dict[str, dict[str, dict[str, str]]] = {
     "login": {
         "login_success": {
             "ru": "Вы успешно вошли в систему ✅",
@@ -11,7 +11,7 @@ ANSWERS = {
             "uz": "Men sizni tanimadim ❌\nAdministratorga murojaat qiling 👨‍💻",
         },
         "wrong_password": {
-            "ru": "Неверный пароль ⚠️",
+            "ru": "Неверный пароль ⚠️", 
             "uz": "Noto'g'ri parol ⚠️"
         },
         "wrong_pin": {
@@ -27,6 +27,17 @@ ANSWERS = {
             "uz": "Parolingizni kiriting 🔐 (8–64 belgi)",
         },
     },
+    
+    "tasks": {
+        "tasks": {
+            "ru": "Ваши задачи 🗂",
+            "uz": "Sizning vazifalaringiz 🗂"
+        },
+        "not_tasks": {
+            "ru": "У вас пока нет задач 📭",
+            "uz": "Sizda hozircha vazifalar yo‘q 📭",
+        },
+    }
 }
 
 

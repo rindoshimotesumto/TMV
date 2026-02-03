@@ -1,70 +1,10 @@
-import time
-
+from answers_template import ANSWERS
 from database.database import DataBase
 from database.tables.users import get_info_of_user, get_info_user_by_pin_code
-from handlers.template_of_answers.answers import ANSWERS
+from handlers.utils.cache import cache_get_user, cache_set_user
 from logger.logger import write_logs
 
 db = DataBase()
-
-USERS_CACHE: dict[int, tuple[dict, float]] = {}
-# ------
-SECOND = 1
-MINUTE = SECOND * 60
-HOUR = MINUTE * 60
-# ------
-
-CACHE_TTL: int = 30 * MINUTE
-
-
-def cache_set_user(tg_id: int, user: dict) -> None:
-    """
-    Добавляет пользователя в кэш с временем жизни (TTL).\n
-
-    :param tg_id: Telegram ID пользователя.
-    :param user: Словарь с данными пользователя.
-    """
-
-    USERS_CACHE[tg_id] = (dict(user), time.time() + CACHE_TTL)
-
-
-def cache_delete_user(tg_id: int) -> None:
-    """
-    Удаляет пользователя из кэша по Telegram ID.\n
-
-    :param tg_id: Telegram ID пользователя.
-    """
-
-    USERS_CACHE.pop(tg_id, None)
-
-
-def cache_get_user(tg_id: int) -> dict | None:
-    """
-    Получает данные пользователя из кэша по Telegram ID.\n
-
-    Проверяет срок жизни записи (TTL). Если запись устарела —
-    возвращает None и стирает с памяти.
-
-    :param tg_id: Telegram ID пользователя.
-    :return: Словарь с данными пользователя или None, если записи нет
-             или срок действия истёк.
-    """
-
-    cached: tuple[dict, float] | None = USERS_CACHE.get(tg_id)
-
-    if cached:
-        data: dict
-        expire: float
-
-        data, expire = cached
-        now: float = time.time()
-
-        if expire > now:
-            return data
-
-        cache_delete_user(tg_id)
-
-    return None
 
 
 async def login_user(tg_id: int, pin_code: str = "") -> tuple:
@@ -121,14 +61,3 @@ async def login_user(tg_id: int, pin_code: str = "") -> tuple:
         result = ANSWERS["login"]["login_success"][lang]
 
     return (status, result, lang, role, password)
-
-
-def get_users_in_cache() -> None:
-    result = "USERS in cache LIST" + "\n" + "-" * 15 + "\n"
-
-    for key, value in USERS_CACHE.items():
-        result += f"tg.id: {key}\ninfo: {value}" + "\n" + "-" * 15
-
-    write_logs(
-        f"CALL: handlers/start/login_user.py | get_users_in_cache() | ✅\nResult: {result}"
-    )

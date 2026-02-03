@@ -1,4 +1,4 @@
-BTN_TEXTS = {
+BTN_TEXTS: dict[str, dict[str, str]] = {
     "my_tasks": {"ru": "📋 Мои задачи", "uz": "📋 Mening vazifalarim"},
     "profile": {"ru": "👤 Профиль", "uz": "👤 Profil"},
     "users": {"ru": "👥 Пользователи", "uz": "👥 Foydalanuvchilar"},
@@ -8,11 +8,13 @@ BTN_TEXTS = {
     "completed": {"ru": "✅ Завершённые", "uz": "✅ Tugallangan"},
     "canceled": {"ru": "❌ Отменённые", "uz": "❌ Bekor qilingan"},
     "overdue": {"ru": "⏰ Просроченные", "uz": "⏰ Muddati o‘tgan"},
+    "task": {"ru": "🗂 Задача №", "uz": "🗂 Vazifa №"},
+    "back_to_menu": {"ru": "◀️", "uz": "◀️"},
 }
 
 
-ROLE_BUTTONS = {
-    "user": ("my_tasks", "in_progress", "completed", "canceled", "overdue", "profile"),
-    "admin": ("my_tasks", "users", "reports", "profile"),
-    "superadmin": ("my_tasks", "users", "reports", "settings", "profile"),
+ROLE_BUTTONS: dict[str, set[str]] = {
+    "user": {"my_tasks", "in_progress", "completed", "canceled", "overdue", "profile"},
+    "admin": {"my_tasks", "users", "reports", "profile"},
+    "superadmin": {"my_tasks", "users", "reports", "settings", "profile"},
 }
