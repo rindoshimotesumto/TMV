@@ -7,7 +7,12 @@ from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
 from database.migrations import migrations
-from handlers.start import start
+
+from handlers.start import sign_in, start
+from handlers.tasks import tasks
+
+from middlewares.middlewares import setup_middlewares
+
 from logger.logger import write_logs
 
 load_dotenv(dotenv_path=".env")
@@ -23,11 +28,15 @@ async def main():
         bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
         dp = Dispatcher()
-
+        
+        
         dp.include_routers(
             start.router,
+            sign_in.router,
+            tasks.router,
         )
 
+        await setup_middlewares(dp)
         await migrations.create_all_tables()
 
         write_logs("Bot started, link: https://t.me/tasksys_bot ✅")

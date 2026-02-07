@@ -47,3 +47,11 @@ ERRORS = {
         "uz": "Telegram akkaunt ID sini aniqlab bo‘lmadi!",
     }
 }
+
+
+LOCKS = {
+    "too_many_attempts": {
+        "ru": "⛔ Слишком много попыток ввода.\nПопробуйте снова через {minutes} мин.",
+        "uz": "⛔ Juda ko‘p urinishlar qilindi.\n{minutes} daqiqadan keyin qayta urinib ko‘ring."
+    }
+}

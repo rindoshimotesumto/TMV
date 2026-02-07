@@ -1,7 +1,7 @@
 from typing import Iterable
 
 import aiosqlite
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from answers_template import ANSWERS
@@ -14,10 +14,7 @@ def build_menu_kb(role: str = "user", lang: str = "uz") -> InlineKeyboardMarkup 
     Генерирует клавиатуру меню по роли пользователя.
     """
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
-    btns: set | None = ROLE_BUTTONS.get(role)
-
-    if not btns:
-        return None
+    btns: tuple = ROLE_BUTTONS.get(role, ROLE_BUTTONS["user"])
 
     try:
         for btn in btns:
@@ -31,45 +28,36 @@ def build_menu_kb(role: str = "user", lang: str = "uz") -> InlineKeyboardMarkup 
         return None
 
 
-def build_tasks_kb(lang: str, tasks: Iterable[aiosqlite.Row]) -> tuple[str, InlineKeyboardMarkup] | None:
+def build_tasks_kb(
+    tasks: Iterable[aiosqlite.Row], lang: str = "uz"
+) -> tuple[str, InlineKeyboardMarkup]:
     """
-    Генерирует inline-клавиатуру со списком задач пользователя.
+    Генерирует клавиатуру задач.
     """
-
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
-    btns: Iterable[aiosqlite.Row] | None = tasks
-    no_tasks: str = ANSWERS["tasks"]["not_tasks"][lang]
+    answer: str = ANSWERS["tasks"]["not_tasks"][lang]
 
-    # если список задач пуст — возвращаем локализованный текст об отсутствии задач
-    if not btns:
-        no_tasks = ANSWERS["tasks"]["tasks"][lang]
-
-        builder.button(
-            text=BTN_TEXTS["back_to_menu"][lang], callback_data="back_to_menu"
-        )
-
-        return no_tasks, builder.as_markup()
-
-    # если задачи есть — формируем кнопки задач и кнопку возврата в меню
     try:
-        for btn in btns:
+        for t in tasks:
             builder.button(
-                text=f"{BTN_TEXTS['task'][lang]}",
-                callback_data=f"task_id:{btn['task_id']}",
+                text=f"{BTN_TEXTS['task'][lang]}{t['task_id']}",
+                callback_data=f"task_n:{t['task_id']}",
             )
 
-        # размещаем кнопки по одной в строке и собираем markup
-        builder.adjust(1)
-        builder.button(
-            text=BTN_TEXTS["back_to_menu"][lang], callback_data="back_to_menu"
-        )
+            builder.adjust(1)
+            answer = ANSWERS["tasks"]["tasks"][lang]
 
-        return no_tasks, builder.as_markup()
-
-    # при любой ошибке сборки клавиатуры — пишем лог и возвращаем None
     except Exception as e:
         write_logs(
-            f"[ERROR]: keyboards/builder_inline_btns.py | build_tasks_list() | {e}"
+            f"[ERROR]: keyboards/builder_inline_btns.py | build_tasks_kb() | {e}"
         )
-        
-        return None
+
+    finally:
+        builder.row(
+            InlineKeyboardButton(
+                text=f"{BTN_TEXTS['back_to_menu'][lang]}", callback_data="back_to_menu"
+            ),
+            width=1,
+        )
+
+        return answer, builder.as_markup()

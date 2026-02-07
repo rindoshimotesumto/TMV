@@ -13,8 +13,8 @@ BTN_TEXTS: dict[str, dict[str, str]] = {
 }
 
 
-ROLE_BUTTONS: dict[str, set[str]] = {
-    "user": {"my_tasks", "in_progress", "completed", "canceled", "overdue", "profile"},
-    "admin": {"my_tasks", "users", "reports", "profile"},
-    "superadmin": {"my_tasks", "users", "reports", "settings", "profile"},
+ROLE_BUTTONS: dict[str, tuple[str, ...]] = {
+    "user": ("my_tasks", "in_progress", "completed", "canceled", "overdue", "profile"),
+    "admin": ("my_tasks", "users", "reports", "profile"),
+    "superadmin": ("my_tasks", "users", "reports", "settings", "profile"),
 }

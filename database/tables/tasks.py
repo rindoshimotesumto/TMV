@@ -9,63 +9,80 @@ from logger.logger import write_logs
 async def create_tasks_table(db: aiosqlite.Connection) -> None:
     try:
         await db.execute("""
-            CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tg_audio_file_id TEXT NOT NULL,
-                audio_text TEXT NOT NULL,
+            CREATE TABLE IF NOT EXISTS tasks (                                      -- создаём таблицу задач, если ещё не существует
 
-                status TEXT CHECK (status IN ('new', 'in_progress', 'completed', 'canceled', 'overdue')) DEFAULT 'new',
+                id INTEGER PRIMARY KEY AUTOINCREMENT,                               -- внутренний авто-инкрементный ID задачи
 
-                user_id INTEGER NOT NULL,
+                tg_audio_file_id TEXT NOT NULL,                                     -- file_id голосового сообщения в Telegram
+                audio_text TEXT NOT NULL,                                           -- распознанный текст аудио
 
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status TEXT
+                    CHECK (status IN (
+                        'new', 'in_progress', 'completed', 'canceled', 'overdue'
+                    ))
+                    DEFAULT 'new',                                                  -- статус задачи с ограничением допустимых значений
 
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE);
-            """)
+                user_id INTEGER NOT NULL,                                           -- владелец задачи (FK → users.id)
+
+                created_at TIMESTAMP
+                    DEFAULT CURRENT_TIMESTAMP,                                      -- время создания задачи
+
+                updated_at TIMESTAMP
+                    DEFAULT CURRENT_TIMESTAMP,                                      -- время последнего обновления (обновлять кодом/триггером)
+
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE RESTRICT                                              -- нельзя удалить пользователя, если есть задачи
+                    ON UPDATE CASCADE                                               -- при изменении id пользователя — обновится здесь
+            );
+        """)
 
     except Exception as e:
-        write_logs(f"⚠️ TABLE tasks ERROR: {e}")
-        raise
+        write_logs(f"⚠️ TABLE tasks ERROR: {e}")  # логируем ошибку создания таблицы
+        raise  # пробрасываем ошибку выше
 
 
 async def get_users_task_by_tgID(
     db: DataBase, user_id: int, status: Optional[str] = None
 ) -> Iterable[aiosqlite.Row] | None:
     """
-    Возвращает список задач пользователя.\n
-    Если передан статус — возвращает только задачи с этим статусом,
-    иначе — все задачи пользователя.
+    Возвращает список задач пользователя.
+    Если передан статус — фильтрует по статусу,
+    иначе — возвращает все задачи пользователя.
     """
     try:
-        # базовый SQL-запрос: берём задачи и связываем их с таблицей назначений
+        # базовый SELECT — берём поля задачи + связь назначений
         sql: str = """
         SELECT
-            t.user_id,
-            t.audio_text,
-            t.tg_audio_file_id,
-            t_ass.task_id
+            t_ass.user_id,            -- ID пользователя-исполнителя
+            t.audio_text,             -- текст задачи
+            t.tg_audio_file_id,       -- Telegram file_id аудио
+            t_ass.task_id             -- ID задачи
 
         FROM tasks t
-        JOIN task_assignees t_ass
+        JOIN task_assignees t_ass     -- соединяем с таблицей назначений
             ON t_ass.task_id = t.id
-        WHERE t_ass.user_id = ?
+        WHERE t_ass.user_id = ?       -- фильтр по пользователю
         """
 
-        # список параметров для подстановки в SQL (начинаем с user_id)
+        # параметры запроса (первый — user_id)
         params: list = [user_id]
 
-        # если указан статус — добавляем фильтр по статусу задачи
+        # если передан статус — добавляем фильтр
         if status is not None:
-            sql += " AND t_ass.status = ?"
-            params.append(status)
+            if status != "my_tasks":  # спец-режим: "my_tasks" = без фильтра по статусу
+                sql += " AND t_ass.status = ?"
+                params.append(status)
 
-        # сортировка по убыванию id задачи и ограничение количества результатов
+        # сортировка новых задач сверху + ограничение выдачи
         sql += " ORDER BY t.id DESC LIMIT 3"
 
         # выполняем запрос и возвращаем все найденные строки
         return await db.execute(query=sql, params=tuple(params), fetchall=True)
 
     except Exception as e:
-        write_logs(f"[ERROR] database/tables/tasks.py | get_users_task_by_tgID() | {e}")
-        return
+        write_logs(
+            "[ERROR] database/tables/tasks.py | get_users_task_by_tgID() | "  # логируем ошибку запроса
+            f"{e}"
+        )
+        return  # при ошибке возвращаем None
