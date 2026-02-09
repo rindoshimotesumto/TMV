@@ -14,9 +14,10 @@ class CacheUserMiddleware(BaseMiddleware):
         и проброса его в data для хендлеров и других middleware.
     """
     async def __call__(self, handler, event: TelegramObject, data):
-        if isinstance(event, Message) and event.from_user:
-            tg_id = event.from_user.id
-            
+        from_user = getattr(event, "from_user", None)
+        
+        if from_user:
+            tg_id = from_user.id
             # кладём пользователя из кеша в data
             # теперь в handler можно делать: data["cache_user"]
             data["cache_user"] = get_user_in_cache(tg_id)  # dict | None
@@ -61,4 +62,7 @@ async def setup_middlewares(dp: Dispatcher):
        Вызывается при старте бота.
     """
     for mw_cls in middlwares:
-        dp.message.middleware(mw_cls())
+        mw = mw_cls()
+        dp.message.middleware(mw)
+    
+    dp.callback_query.middleware(CacheUserMiddleware())

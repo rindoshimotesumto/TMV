@@ -33,10 +33,26 @@ ANSWERS: dict[str, dict[str, dict[str, str]]] = {
             "ru": "Ваши задачи 🗂",
             "uz": "Sizning vazifalaringiz 🗂"
         },
-        "not_tasks": {
-            "ru": "У вас пока нет задач 📭",
-            "uz": "Sizda hozircha vazifalar yo‘q 📭",
+        "my_tasks": {
+            "ru": "📭 У вас пока нет задач",
+            "uz": "📭 Sizda hali vazifalar yo‘q",
         },
+        "in_progress": {
+            "ru": "📭 Нет задач в процессе",
+            "uz": "📭 Jarayonda vazifalar yo‘q",
+        },
+        "completed": {
+            "ru": "📭 Нет выполненных задач",
+            "uz": "📭 Bajarilgan vazifalar yo‘q",
+        },
+        "canceled": {
+            "ru": "📭 Нет отменённых задач",
+            "uz": "📭 Bekor qilingan vazifalar yo‘q",
+        },
+        "overdue": {
+            "ru": "📭 Нет просроченных задач",
+            "uz": "📭 Muddati o‘tgan vazifalar yo‘q",
+        }
     }
 }
 

@@ -29,13 +29,17 @@ def build_menu_kb(role: str = "user", lang: str = "uz") -> InlineKeyboardMarkup 
 
 
 def build_tasks_kb(
-    tasks: Iterable[aiosqlite.Row], lang: str = "uz"
+    tasks: Iterable[aiosqlite.Row] | None, status: str | None, lang: str = "uz"
 ) -> tuple[str, InlineKeyboardMarkup]:
     """
     Генерирует клавиатуру задач.
     """
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
-    answer: str = ANSWERS["tasks"]["not_tasks"][lang]
+
+    if status is None:
+        status = "my_tasks"
+
+    answer: str = ANSWERS["tasks"][status][lang]
 
     try:
         for t in tasks:

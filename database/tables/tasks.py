@@ -42,7 +42,7 @@ async def create_tasks_table(db: aiosqlite.Connection) -> None:
         raise  # пробрасываем ошибку выше
 
 
-async def get_users_task_by_tgID(
+async def get_users_task_by_tg_id(
     db: DataBase, user_id: int, status: Optional[str] = None
 ) -> Iterable[aiosqlite.Row] | None:
     """

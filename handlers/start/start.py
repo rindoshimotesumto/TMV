@@ -11,7 +11,7 @@ router = Router()  # роутер для хендлера /start
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message, state: FSMContext, cache_user: dict):
+async def cmd_start(message: Message, state: FSMContext, cache_user: dict | None = None):
     await state.clear()  # очищаем FSM состояние (сбрасываем любые прошлые шаги/данные)
 
     if not message.from_user:
